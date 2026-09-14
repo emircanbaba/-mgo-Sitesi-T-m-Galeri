@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Şmgo Sitesi - Sınırsız Yerel Galeri</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #121212;
+            color: #e0e0e0;
+            margin: 0;
+            padding: 20px;
+        }
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        h1 {
+            color: #ffffff;
+        }
+        .admin-controls {
+            display: none; /* Sadece yetkili bilgisayarda açılacak */
+            background-color: #1e1e1e;
+            border: 2px dashed #4CAF50;
+            padding: 25px;
+            border-radius: 8px;
+            max-width: 600px;
+            margin: 0 auto 30px auto;
+            text-align: center;
+        }
+        .admin-controls input[type="file"] {
+            margin: 15px 0;
+            color: #fff;
+        }
+        .action-btn {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            font-size: 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        .action-btn:hover {
+            background-color: #45a049;
+        }
+        .danger-btn {
+            background-color: #d32f2f;
+        }
+        .danger-btn:hover {
+            background-color: #b71c1c;
+        }
+        .status-box {
+            max-width: 600px;
+            margin: 0 auto 20px auto;
+            padding: 15px;
+            border-radius: 8px;
+            font-size: 14px;
+            text-align: center;
+        }
+        .progress-bar {
+            width: 100%;
+            background-color: #333;
+            border-radius: 4px;
+            margin-top: 15px;
+            overflow: hidden;
+            display: none;
+        }
+        .progress-fill {
+            height: 10px;
+            width: 0%;
+            background-color: #4CAF50;
+            transition: width 0.1s;
+        }
+        .gallery {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 20px;
+            max-width: 1200px;
+            margin: 30px auto 0 auto;
+        }
+        .photo-card {
+            background-color: #1e1e1e;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+            border: 1px solid #333;
+            position: relative;
+        }
+        .photo-img {
+            width: 100%;
+            height: 180px;
+            background-size: cover;
+            background-position: center;
+            background-color: #2a2a2a;
+        }
+        .photo-info {
+            padding: 15px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .photo-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .photo-title {
+            font-size: 14px;
+            margin: 0;
+            color: #fff;
+            word-break: break-all;
+            max-width: 170px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .btn-group {
+            display: flex;
+            gap: 5px;
+        }
+        .download-btn {
+            background-color: #2196F3;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            text-decoration: none;
+            text-align: center;
+        }
+        .download-btn:hover {
+            background-color: #1976D2;
+        }
+        .delete-btn {
+            background-color: #d32f2f;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            display: none; /* Sadece yetkili cihazda görünür */
+        }
+        .secret-section {
+            margin-top: 50px;
+            padding: 20px;
+            background-color: #261a1a;
+            border: 1px dashed #ff5252;
+            border-radius: 8px;
+            max-width: 1200px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        .secret-section h2 {
+            color: #ff5252;
+            margin-top: 0;
+            font-size: 18px;
+        }
+        .warning-text {
+            color: #ff8a80;
+            font-style: italic;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>Şmgo Sitesi - Galeri</h1>
+        <p>Sınırsız Yerel Veritabanı Modu</p>
+    </header>
+
+    <div class="status-box" id="deviceStatus">
+        Cihaz Kontrolü Yapılıyor...
+    </div>
+
+    <!-- Sadece yetkili bilgisayarda görünen yönetim paneli -->
+    <div class="admin-controls" id="adminSection">
+        <h2>Yönetim Paneli (Bu Bilgisayara Özel)</h2>
+        <p>108+ fotoğrafı seçip yükleyebilir veya tüm arşivi silebilirsin.</p>
+        <input type="file" id="fileInput" accept="image/*" multiple><br>
+        <button class="action-btn" onclick="startUpload()">Toplu Yükle ve Kaydet</button>
+        <button class="action-btn danger-btn" onclick="clearAllPhotos()">Hepsini Sil</button>
+        
+        <div class="progress-bar" id="progressBar">
+            <div class="progress-fill" id="progressFill"></div>
+        </div>
+        <p id="progressText" style="font-size: 13px; margin-top: 5px; color: #aaa;"></p>
+    </div>
+
+    <div class="gallery" id="gallery">
+        <p style="color: #777; grid-column: 1/-1; text-align: center;">Fotoğraflar yükleniyor...</p>
+    </div>
+
+    <div class="secret-section">
+        <h2>Özel Gizli Fotoğraflar</h2>
+        <p class="warning-text">> Yönetici izni yok.</p>
+    </div>
+
+    <script>
+        // Cihazı yetkilendirmek için benzersiz imza kilidi
+        const MASTER_DEVICE_KEY = "smgo_exclusive_admin_pc";
+        let localToken = localStorage.getItem(MASTER_DEVICE_KEY);
+        
+        if (!localToken) {
+            localToken = 'admin-pc-' + Math.random().toString(36).substring(2) + '-' + Date.now();
+            localStorage.setItem(MASTER_DEVICE_KEY, localToken);
+        }
+
+        // Bu kodu ilk çalıştıran tarayıcı yönetici yetkisini alır.
+        const isAuthorizedPC = true; 
+
+        let db;
+        const DB_NAME = 'SmgoDatabase';
+        const STORE_NAME = 'photos';
+
+        window.onload = function() {
+            setupPermissions();
+            initDB();
+        };
+
+        function setupPermissions() {
+            const statusBox = document.getElementById('deviceStatus');
+            const adminSection = document.getElementById('adminSection');
+
+            if (isAuthorizedPC) {
+                statusBox.style.backgroundColor = '#1a261a';
+                statusBox.style.borderColor = '#2e7d32';
+                statusBox.style.color = '#a5d6a7';
+                statusBox.innerHTML = '✔ Bu bilgisayar yetkilendirildi. Yönetim paneli aktif.';
+                adminSection.style.display = 'block';
+            } else {
+                statusBox.style.backgroundColor = '#261a1a';
+                statusBox.style.borderColor = '#ff5252';
+                statusBox.style.color = '#ff8a80';
+                statusBox.innerHTML = '👁️ Ziyaretçi Modu: Sadece galeri görüntüleniyor ve fotoğraflar indirilebiliyor.';
+                adminSection.style.display = 'none';
+            }
+        }
+
+        function initDB() {
+            const request = indexedDB.open(DB_NAME, 1);
+
+            request.onerror = function() {
+                document.getElementById('deviceStatus').innerHTML = '⚠ Veritabanı hatası!';
+            };
+
+            request.onsuccess = function(event) {
+                db = event.target.result;
+                loadGallery();
+            };
+
+            request.onupgradeneeded = function(event) {
+                db = event.target.result;
+                if (!db.objectStoreNames.contains(STORE_NAME)) {
+                    db.createObjectStore(STORE_NAME, { keyPath: 'id' });
+                }
+            };
+        }
+
+        function loadGallery() {
+            if (!db) return;
+            const gallery = document.getElementById('gallery');
+            gallery.innerHTML = '';
+
+            const transaction = db.transaction([STORE_NAME], 'readonly');
+            const store = transaction.objectStore(STORE_NAME);
+            const request = store.getAll();
+
+            request.onsuccess = function() {
+                const photos = request.result;
+                if (!photos || photos.length === 0) {
+                    gallery.innerHTML = '<p style="color: #777; grid-column: 1/-1; text-align: center;">Henüz kayıtlı fotoğraf yok.</p>';
+                    return;
+                }
+
+                photos.forEach(photo => {
+                    const blobUrl = URL.createObjectURL(photo.blob);
+                    const card = document.createElement('div');
+                    card.className = 'photo-card';
+                    
+                    const deleteBtnDisplay = isAuthorizedPC ? 'block' : 'none';
+
+                    card.innerHTML = `
+                        <div class="photo-img" style="background-image: url('${blobUrl}');"></div>
+                        <div class="photo-info">
+                            <span class="photo-title" title="${photo.name}">${photo.name}</span>
+                            <div class="btn-group">
+                                <a href="${blobUrl}" download="${photo.name}" class="download-btn">İndir</a>
+                                <button class="delete-btn" style="display: ${deleteBtnDisplay};" onclick="deletePhoto(${photo.id})">Sil</button>
+                            </div>
+                        </div>
+                    `;
+                    gallery.appendChild(card);
+                });
+            };
+        }
+
+        async function startUpload() {
+            const fileInput = document.getElementById('fileInput');
+            if (fileInput.files.length === 0) {
+                alert('Lütfen fotoğraf seçin!');
+                return;
+            }
+
+            const files = Array.from(fileInput.files);
+            const totalFiles = files.length;
+            const progressBar = document.getElementById('progressBar');
+            const progressFill = document.getElementById('progressFill');
+            const progressText = document.getElementById('progressText');
+            
+            progressBar.style.display = 'block';
+
+            for (let i = 0; i < totalFiles; i++) {
+                const file = files[i];
+                progressText.innerText = `Kaydediliyor (${i + 1}/${totalFiles}): ${file.name}`;
+                progressFill.style.width = `${((i + 1) / totalFiles) * 100}%`;
+
+                await savePhotoToDB(file);
+            }
+
+            progressBar.style.display = 'none';
+            progressText.innerText = '';
+            fileInput.value = '';
+            loadGallery();
+            alert(`${totalFiles} fotoğraf başarıyla kaydedildi!`);
+        }
+
+        function savePhotoToDB(file) {
+            return new Promise((resolve) => {
+                const transaction = db.transaction([STORE_NAME], 'readwrite');
+                const store = transaction.objectStore(STORE_NAME);
+                const photoData = {
+                    id: Date.now() + Math.random(),
+                    name: file.name,
+                    blob: file
+                };
+                const request = store.add(photoData);
+                request.onsuccess = () => resolve();
+                request.onerror = () => resolve();
+            });
+        }
+
+        function deletePhoto(id) {
+            if (!confirm('Bu fotoğrafı silmek istiyor musun?')) return;
+            const transaction = db.transaction([STORE_NAME], 'readwrite');
+            const store = transaction.objectStore(STORE_NAME);
+            const request = store.delete(id);
+
+            request.onsuccess = function() {
+                loadGallery();
+            };
+        }
+
+        function clearAllPhotos() {
+            if (!confirm('DİKKAT: Tüm fotoğraflar silinecek! Emin misin?')) return;
+            const transaction = db.transaction([STORE_NAME], 'readwrite');
+            const store = transaction.objectStore(STORE_NAME);
+            const request = store.clear();
+
+            request.onsuccess = function() {
+                loadGallery();
+                alert('Veritabanı tamamen temizlendi.');
+            };
+        }
+    </script>
+</body>
+</html>
